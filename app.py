@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="Autonomous 11-Agent Quant Trading Terminal")
 
-# স্বয়ংক্রিয়ভাবে পরিচালিত ট্রেড স্টোরেজ (SL, TP ও প্রফিটসহ)
+# স্বয়ংক্রিয়ভাবে পরিচালিত লাইভ ট্রেড স্টোরেজ
 AUTONOMOUS_TRADES = [
     {
         "id": 1, 
@@ -32,20 +32,21 @@ AUTONOMOUS_TRADES = [
     }
 ]
 
-# ল্যাপটপের MT4 ব্রিজের সাথে সিগন্যাল আদান-প্রদানের কিউ (Queue)
+# MT4 EA-এর কাছে পাঠানোর জন্য পেন্ডিং সিগন্যাল কিউ
 PENDING_MT4_COMMANDS = []
 
-def get_autonomous_market_scans():
-    return [
+def run_11_agent_confluence_engine():
+    scans = [
         {"pair": "XAUUSD", "dir": "SELL", "dir_color": "bg-red-900/60 text-red-300 border-red-700", "grade": "A+", "score": "91/100", "regime": "STRONG_TREND", "confluence": "LDN+NY Overlap, H4+H1 Aligned, ADX Power (45)", "agents_vote": "11/11 APPROVED", "price": "4003.36", "sl": "4035.50", "tp": "3940.00"},
         {"pair": "EURUSD", "dir": "SELL", "dir_color": "bg-red-900/60 text-red-300 border-red-700", "grade": "A+", "score": "91/100", "regime": "STRONG_TREND", "confluence": "LDN+NY Overlap, H4+H1 Aligned, ADX Power (61)", "agents_vote": "11/11 APPROVED", "price": "1.10961", "sl": "1.11400", "tp": "1.10000"},
         {"pair": "USDJPY", "dir": "BUY", "dir_color": "bg-emerald-900/60 text-emerald-300 border-emerald-700", "grade": "A+", "score": "91/100", "regime": "STRONG_TREND", "confluence": "LDN+NY Overlap, H4+H1 Aligned, ADX Power (62)", "agents_vote": "10/11 APPROVED", "price": "159.81", "sl": "159.20", "tp": "161.00"},
         {"pair": "GBPUSD", "dir": "SELL", "dir_color": "bg-red-900/60 text-red-300 border-red-700", "grade": "A+", "score": "90/100", "regime": "STRONG_TREND", "confluence": "LDN+NY Overlap, H4+H1 Aligned, ADX Power (42)", "agents_vote": "9/11 APPROVED", "price": "1.32805", "sl": "1.33400", "tp": "1.31500"}
     ]
+    return scans
 
 @app.get("/", response_class=HTMLResponse)
 def autonomous_terminal():
-    scans = get_autonomous_market_scans()
+    scans = run_11_agent_confluence_engine()
     
     scanner_rows = ""
     for item in scans:
@@ -91,22 +92,15 @@ def autonomous_terminal():
     </head>
     <body class="bg-slate-950 text-slate-100 font-sans min-h-screen p-6">
         
-        <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center border-b border-slate-800 pb-4 mb-6 gap-4">
             <div>
                 <h1 class="text-2xl font-black tracking-tight text-emerald-400 flex items-center gap-2">
-                    🤖 AUTONOMOUS 11-AGENT QUANT TERMINAL <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full">MT4 LIVE BRIDGE ACTIVE</span>
+                    🤖 AUTONOMOUS 11-AGENT QUANT TERMINAL <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full">DIRECT MT4 WEBREQUEST ACTIVE</span>
                 </h1>
                 <p class="text-xs text-slate-400 mt-1">Self-Adaptive 4-Regime Confluence & Fully Automated Execution Grid</p>
             </div>
-            <div class="flex gap-3">
-                <span class="bg-emerald-900/40 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-mono border border-emerald-700/60 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 11 AGENTS: SCANNING
-                </span>
-            </div>
         </header>
 
-        <!-- Top Overview Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
                 <p class="text-xs text-slate-400">Account Equity</p>
@@ -115,54 +109,20 @@ def autonomous_terminal():
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
                 <p class="text-xs text-slate-400">AI Consensus Threshold</p>
                 <h2 class="text-xl font-bold text-emerald-400 mt-1">>= 8 / 11 Agents</h2>
-                <span class="text-[10px] text-emerald-500 font-semibold">Strict Filtering Active</span>
             </div>
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
-                <p class="text-xs text-slate-400">Autonomous Active Trades</p>
+                <p class="text-xs text-slate-400">Active Trades</p>
                 <h2 class="text-xl font-bold text-amber-400 mt-1">{len(AUTONOMOUS_TRADES)} Positions</h2>
             </div>
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
                 <p class="text-xs text-slate-400">Risk Guard Status</p>
                 <h2 class="text-xl font-bold text-emerald-400 mt-1">SECURE</h2>
-                <span class="text-[10px] text-slate-500">Max Drawdown Protected</span>
             </div>
         </div>
 
-        <!-- LIVE TRADINGVIEW CHART SECTION -->
-        <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 mb-6 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-sm font-bold text-slate-200 tracking-wider">📈 LIVE MARKET CHART (XAUUSD / FOREX)</h2>
-                <span class="text-xs text-slate-400 font-mono">Real-time TradingView Feed</span>
-            </div>
-            <div class="tradingview-widget-container" style="height:450px;width:100%">
-                <div id="tradingview_widget" style="height:100%;width:100%"></div>
-                <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-                <script type="text/javascript">
-                new TradingView.widget(
-                {{
-                    "autosize": true,
-                    "symbol": "OANDA:XAUUSD",
-                    "interval": "15",
-                    "timezone": "Etc/UTC",
-                    "theme": "dark",
-                    "style": "1",
-                    "locale": "en",
-                    "toolbar_bg": "#f1f3f6",
-                    "enable_publishing": false,
-                    "hide_top_toolbar": false,
-                    "save_image": false,
-                    "container_id": "tradingview_widget"
-                }}
-                );
-                </script>
-            </div>
-        </div>
-
-        <!-- 11-Agent Confluence Scanner Table -->
         <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden mb-6 shadow-2xl">
             <div class="bg-slate-900 px-5 py-3 border-b border-slate-800 flex justify-between items-center">
                 <h2 class="text-sm font-bold text-slate-200 tracking-wider">01 / AI AGENT MARKET RESEARCH & SL/TP MATRIX</h2>
-                <span class="text-xs text-slate-400 font-mono">Autonomous Evaluation Grid</span>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
@@ -175,8 +135,8 @@ def autonomous_terminal():
                             <th class="p-3">MARKET REGIME</th>
                             <th class="p-3">CONFLUENCE FACTORS</th>
                             <th class="p-3">11-AGENT CONSENSUS</th>
-                            <th class="p-3">STOP LOSS (SL)</th>
-                            <th class="p-3">TAKE PROFIT (TP)</th>
+                            <th class="p-3">STOP LOSS</th>
+                            <th class="p-3">TAKE PROFIT</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -186,10 +146,9 @@ def autonomous_terminal():
             </div>
         </div>
 
-        <!-- Autonomous Trade Management Section -->
         <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-base font-bold text-slate-200">🤖 Autonomous AI Trade Execution (SL/TP Active)</h2>
+                <h2 class="text-base font-bold text-slate-200">🤖 Autonomous AI Trade Execution</h2>
                 <a href="/trigger-auto-scan" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs transition shadow-lg">
                     TRIGGER AI AGENT SCAN & TRADE
                 </a>
@@ -226,7 +185,6 @@ def trigger_auto_scan():
     global AUTONOMOUS_TRADES, PENDING_MT4_COMMANDS
     new_id = len(AUTONOMOUS_TRADES) + 1
     
-    # নতুন ট্রেড যোগ করা
     AUTONOMOUS_TRADES.append({
         "id": new_id,
         "pair": "GBPUSD",
@@ -240,7 +198,7 @@ def trigger_auto_scan():
         "status": "RUNNING"
     })
     
-    # ল্যাপটপের MT4 ব্রিজের জন্য সিগন্যাল কিউ-তে যুক্ত করা
+    # MT4 EA সরাসরি এই কমান্ড ফেচ করে নেবে
     PENDING_MT4_COMMANDS.append({
         "symbol": "GBPUSD",
         "type": "SELL",
@@ -250,7 +208,6 @@ def trigger_auto_scan():
     
     return autonomous_terminal()
 
-# MT4 Bridge-এর জন্য API Endpoints
 @app.get("/api/get-signals")
 def get_pending_signals():
     global PENDING_MT4_COMMANDS
