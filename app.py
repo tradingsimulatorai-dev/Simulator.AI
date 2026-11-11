@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, Form
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="Autonomous 11-Agent Quant Trading Terminal")
@@ -180,7 +180,7 @@ def autonomous_terminal():
     """
     return html_content
 
-@app.get("/trigger-auto-scan")
+@app.get("/trigger-auto-scan", response_class=HTMLResponse)
 def trigger_auto_scan():
     global AUTONOMOUS_TRADES, PENDING_MT4_COMMANDS
     new_id = len(AUTONOMOUS_TRADES) + 1
@@ -198,7 +198,6 @@ def trigger_auto_scan():
         "status": "RUNNING"
     })
     
-    # MT4 EA সরাসরি এই কমান্ড ফেচ করে নেবে
     PENDING_MT4_COMMANDS.append({
         "symbol": "GBPUSD",
         "type": "SELL",
