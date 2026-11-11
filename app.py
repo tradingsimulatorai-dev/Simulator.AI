@@ -32,6 +32,9 @@ AUTONOMOUS_TRADES = [
     }
 ]
 
+# ল্যাপটপের MT4 ব্রিজের সাথে সিগন্যাল আদান-প্রদানের কিউ (Queue)
+PENDING_MT4_COMMANDS = []
+
 def get_autonomous_market_scans():
     return [
         {"pair": "XAUUSD", "dir": "SELL", "dir_color": "bg-red-900/60 text-red-300 border-red-700", "grade": "A+", "score": "91/100", "regime": "STRONG_TREND", "confluence": "LDN+NY Overlap, H4+H1 Aligned, ADX Power (45)", "agents_vote": "11/11 APPROVED", "price": "4003.36", "sl": "4035.50", "tp": "3940.00"},
@@ -92,13 +95,13 @@ def autonomous_terminal():
         <header class="flex flex-col md:flex-row justify-between items-center border-b border-slate-800 pb-4 mb-6 gap-4">
             <div>
                 <h1 class="text-2xl font-black tracking-tight text-emerald-400 flex items-center gap-2">
-                    🤖 AUTONOMOUS 11-AGENT QUANT TERMINAL <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full">LIVE CHARTS & SL/TP ENGINE</span>
+                    🤖 AUTONOMOUS 11-AGENT QUANT TERMINAL <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-800 px-2 py-0.5 rounded-full">MT4 LIVE BRIDGE ACTIVE</span>
                 </h1>
                 <p class="text-xs text-slate-400 mt-1">Self-Adaptive 4-Regime Confluence & Fully Automated Execution Grid</p>
             </div>
             <div class="flex gap-3">
                 <span class="bg-emerald-900/40 text-emerald-300 px-3 py-1.5 rounded-lg text-xs font-mono border border-emerald-700/60 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 11 AGENTS: ACTIVE
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 11 AGENTS: SCANNING
                 </span>
             </div>
         </header>
@@ -220,8 +223,10 @@ def autonomous_terminal():
 
 @app.get("/trigger-auto-scan")
 def trigger_auto_scan():
-    global AUTONOMOUS_TRADES
+    global AUTONOMOUS_TRADES, PENDING_MT4_COMMANDS
     new_id = len(AUTONOMOUS_TRADES) + 1
+    
+    # নতুন ট্রেড যোগ করা
     AUTONOMOUS_TRADES.append({
         "id": new_id,
         "pair": "GBPUSD",
@@ -234,7 +239,24 @@ def trigger_auto_scan():
         "pnl": "+$18.50",
         "status": "RUNNING"
     })
+    
+    # ল্যাপটপের MT4 ব্রিজের জন্য সিগন্যাল কিউ-তে যুক্ত করা
+    PENDING_MT4_COMMANDS.append({
+        "symbol": "GBPUSD",
+        "type": "SELL",
+        "sl": 50,
+        "tp": 100
+    })
+    
     return autonomous_terminal()
+
+# MT4 Bridge-এর জন্য API Endpoints
+@app.get("/api/get-signals")
+def get_pending_signals():
+    global PENDING_MT4_COMMANDS
+    orders_to_send = list(PENDING_MT4_COMMANDS)
+    PENDING_MT4_COMMANDS.clear()
+    return {"status": "SUCCESS", "pending_orders": orders_to_send}
 
 @app.get("/close-auto-trade/{trade_id}", response_class=HTMLResponse)
 def close_auto_trade(trade_id: int):
