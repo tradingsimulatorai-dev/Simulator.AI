@@ -1,10 +1,10 @@
 import uvicorn
-from fastapi import FastAPI, RedirectResponse
+from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
 
 app = FastAPI(title="Autonomous 11-Agent Quant Trading Terminal")
 
-# স্বয়ংক্রিয়ভাবে পরিচালিত ট্রেড স্টোরেজ (অটো ট্রেডিংয়ের জন্য)
+# স্বয়ংক্রিয়ভাবে পরিচালিত ট্রেড স্টোরেজ
 AUTONOMOUS_TRADES = [
     {"id": 1, "pair": "EURUSD", "type": "SELL", "entry": "1.10961", "score": "91/100", "agents": "11/11 PASS", "pnl": "+$34.50", "status": "ACTIVE"},
     {"id": 2, "pair": "USDJPY", "type": "BUY", "entry": "159.81", "score": "91/100", "agents": "10/11 PASS", "pnl": "+$18.20", "status": "ACTIVE"}
@@ -29,7 +29,6 @@ def get_autonomous_market_scans():
 def autonomous_terminal():
     scans = get_autonomous_market_scans()
     
-    # স্ক্যানার টেবিল রো তৈরি করা
     scanner_rows = ""
     for item in scans:
         scanner_rows += f"""
@@ -45,7 +44,6 @@ def autonomous_terminal():
         </tr>
         """
 
-    # অটোমেটেড ট্রেড রো তৈরি করা
     trade_rows = ""
     for trade in AUTONOMOUS_TRADES:
         pnl_color = "text-emerald-400" if "+" in trade['pnl'] else "text-red-400"
@@ -72,7 +70,6 @@ def autonomous_terminal():
     </head>
     <body class="bg-slate-950 text-slate-100 font-sans min-h-screen p-6">
         
-        <!-- Header -->
         <header class="flex flex-col md:flex-row justify-between items-center border-b border-slate-800 pb-4 mb-6 gap-4">
             <div>
                 <h1 class="text-2xl font-black tracking-tight text-emerald-400 flex items-center gap-2">
@@ -87,7 +84,6 @@ def autonomous_terminal():
             </div>
         </header>
 
-        <!-- Top Overview Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
                 <p class="text-xs text-slate-400">Account Equity</p>
@@ -109,7 +105,6 @@ def autonomous_terminal():
             </div>
         </div>
 
-        <!-- 11-Agent Confluence Scanner Table -->
         <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden mb-6 shadow-2xl">
             <div class="bg-slate-900 px-5 py-3 border-b border-slate-800 flex justify-between items-center">
                 <h2 class="text-sm font-bold text-slate-200 tracking-wider">01 / AI AGENT MARKET RESEARCH & 4-REGIME RANKING</h2>
@@ -136,7 +131,6 @@ def autonomous_terminal():
             </div>
         </div>
 
-        <!-- Autonomous Trade Management Section -->
         <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-base font-bold text-slate-200">🤖 Autonomous AI Trade Execution & Management</h2>
@@ -169,14 +163,10 @@ def autonomous_terminal():
     """
     return html_content
 
-# -------------------------------------------------------------
-# ৩. অটোমেটেড স্ক্যান ও ট্রেড ট্রিগার রাউটস
-# -------------------------------------------------------------
 @app.get("/trigger-auto-scan")
 def trigger_auto_scan():
     global AUTONOMOUS_TRADES
     new_id = len(AUTONOMOUS_TRADES) + 1
-    # নতুন একটি অটোমেটেড ট্রেড যোগ করা হচ্ছে যা এজেন্ট ভেরিফাইড
     AUTONOMOUS_TRADES.append({
         "id": new_id,
         "pair": "XAUUSD",
@@ -187,17 +177,15 @@ def trigger_auto_scan():
         "pnl": "+$12.00",
         "status": "ACTIVE"
     })
-    return RedirectResponse(url="/", status_code=303)
+    # HTML ফেরত দিয়ে পেজ রিফ্রেশ করে নেওয়া
+    return autonomous_terminal()
 
-@app.get("/close-auto-trade/{trade_id}")
+@app.get("/close-auto-trade/{trade_id}", response_class=HTMLResponse)
 def close_auto_trade(trade_id: int):
     global AUTONOMOUS_TRADES
     AUTONOMOUS_TRADES = [t for t in AUTONOMOUS_TRADES if t["id"] != trade_id]
-    return RedirectResponse(url="/", status_code=303)
+    return autonomous_terminal()
 
-# -------------------------------------------------------------
-# ৪. সার্ভার স্টার্টআপ
-# -------------------------------------------------------------
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
-        
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
